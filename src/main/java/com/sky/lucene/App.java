@@ -17,16 +17,16 @@ public class App {
 	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
 	public static void main(String[] args) throws IOException {
-		NRTLuceneContext.getInstance();
+		LuceneContext.getInstance();
 		new Thread() {
 			public void run() {
 				while (true) {
 					try {
-						IndexSearcher searcher = NRTLuceneContext.getInstance().getSeacher();
+						IndexSearcher searcher = LuceneContext.getInstance().getSeacher();
 						TermQuery query = new TermQuery(new Term("id", "A00001"));
 						TopDocs tds = searcher.search(query, 30);
 						logger.info("1. Docs Size : {}", tds.totalHits);
-						NRTLuceneContext.getInstance().releaseSearcher(searcher);
+						LuceneContext.getInstance().releaseSearcher(searcher);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -45,9 +45,9 @@ public class App {
 				while (true) {
 					try {
 						TermQuery query = new TermQuery(new Term("id", "A00001"));
-						IndexSearcher searcher = NRTLuceneContext.getInstance().getSeacher();
+						IndexSearcher searcher = LuceneContext.getInstance().getSeacher();
 						TopDocs tds = searcher.search(query, 30);
-						NRTLuceneContext.getInstance().releaseSearcher(searcher);
+						LuceneContext.getInstance().releaseSearcher(searcher);
 						logger.info("2. Docs Size : {}", tds.totalHits);
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -75,8 +75,8 @@ public class App {
 				doc.add(new StringField("id", "A00001", Store.YES));
 				doc.add(new StringField("status", "1", Store.YES));
 				doc.add(new StringField("statusName", "WaitForAudit", Store.YES));
-				NRTLuceneContext.getInstance().addDocument(doc);
-				NRTLuceneContext.getInstance().commit();
+				LuceneContext.getInstance().addDocument(doc);
+				LuceneContext.getInstance().commit();
 				logger.info("3. Added Document : {}", "A00001");
 			}
 		}.start();

@@ -5,10 +5,8 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.NRTManager;
@@ -19,6 +17,7 @@ import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 
 public class LuceneContext {
+	public static final Version LUCENE_VERSION = Version.LUCENE_40;
 	private static final String indexFolder = "./index";
 	private static LuceneContext instance;
 	private NRTManager nrtManager;
@@ -50,7 +49,7 @@ public class LuceneContext {
 		}
 		// Writer
 		try {
-			IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_40, new SimpleAnalyzer(Version.LUCENE_40));
+			IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, new SimpleAnalyzer(LUCENE_VERSION));
 			config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
 			writer = new IndexWriter(directory, config);
 		} catch (IOException e) {
@@ -59,17 +58,9 @@ public class LuceneContext {
 
 		try {
 			nrtManager = new NRTManager(new TrackingIndexWriter(writer), new SearcherFactory());
-			// nrtManager = new NRTManager(new TrackingIndexWriter(writer), new
-			// SearcherFactory() {
-			// @Override
-			// public IndexSearcher newSearcher(IndexReader r) throws
-			// IOException {
-			// IndexReader multiReader = new MultiReader();
-			// IndexSearcher searcher = new IndexSearcher(multiReader);
-			// return searcher;
-			// }
-			// });
-			reopenThread = new NRTManagerReopenThread(nrtManager, 5.0, 0.0);
+			reopenThread = new NRTManagerReopenThread(nrtManager, 1.0, 0.0); // maxStaleSec
+																				// ,minStaleSec
+			// reopenThread = new NRTManagerReopenThread(nrtManager, 5.0, 0.0);
 			reopenThread.setDaemon(true);
 			reopenThread.start();
 		} catch (IOException e) {
@@ -108,7 +99,6 @@ public class LuceneContext {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// 不Commit，透過NRTManager來通知
 	}
 
 	public void updateDocument(Term term, Document doc) {
@@ -117,10 +107,9 @@ public class LuceneContext {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// 不Commit，透過NRTManager來通知
 	}
 
-	public void commitIndex() {
+	public void commit() {
 		try {
 			writer.commit();
 		} catch (IOException e) {
