@@ -2,16 +2,12 @@ package com.sky.lucene;
 
 import java.io.IOException;
 
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field.Store;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sky.lucene.LuceneContext.Domain;
+import com.sky.lucene.LuceneContext.IndexManager;
 
 public class App {
 	private static final Logger logger = LoggerFactory.getLogger(App.class);
@@ -21,15 +17,30 @@ public class App {
 		new Thread() {
 			public void run() {
 				while (true) {
+					VoDevice voDevice = new VoDevice();
+					voDevice.setDeviceId("A00001");
+					voDevice.setCategory("SD");
+
+					LuceneContext.getInstance().getIndexManager(Domain.DEVICE).addVo(voDevice);
+
 					try {
-						IndexSearcher searcher = LuceneContext.getInstance().getSeacher();
-						TermQuery query = new TermQuery(new Term("id", "A00001"));
-						TopDocs tds = searcher.search(query, 30);
-						logger.info("1. Docs Size : {}", tds.totalHits);
-						LuceneContext.getInstance().releaseSearcher(searcher);
-					} catch (IOException e) {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+				}
+
+			}
+		}.start();
+		new Thread() {
+			public void run() {
+				while (true) {
+					VoDevice voDevice = new VoDevice();
+					voDevice.setDeviceId("A00001");
+					voDevice.setCategory("SD");
+
+					LuceneContext.getInstance().getIndexManager(Domain.DEVICE).addVo(voDevice);
+
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -43,15 +54,11 @@ public class App {
 		new Thread() {
 			public void run() {
 				while (true) {
-					try {
-						TermQuery query = new TermQuery(new Term("id", "A00001"));
-						IndexSearcher searcher = LuceneContext.getInstance().getSeacher();
-						TopDocs tds = searcher.search(query, 30);
-						LuceneContext.getInstance().releaseSearcher(searcher);
-						logger.info("2. Docs Size : {}", tds.totalHits);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					IndexManager deviceManager = LuceneContext.getInstance().getIndexManager(Domain.DEVICE);
+					Query query = deviceManager.createKeywordQuery("000");
+					PageInfo<VoDevice> pageInfo = deviceManager.search(query, 1, 10);
+					logger.info("Device Record Count : {}", pageInfo.getRecordCount());
+
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -62,23 +69,19 @@ public class App {
 			}
 		}.start();
 
-		int ms = (RandomUtils.nextInt(10) + 1) * 1000;
-		logger.info("3. ms : {}", ms);
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		new Thread() {
-			public void run() {
-				Document doc = new Document();
-				doc.add(new StringField("id", "A00001", Store.YES));
-				doc.add(new StringField("status", "1", Store.YES));
-				doc.add(new StringField("statusName", "WaitForAudit", Store.YES));
-				LuceneContext.getInstance().addDocument(doc);
-				LuceneContext.getInstance().commit();
-				logger.info("3. Added Document : {}", "A00001");
-			}
-		}.start();
 	}
+	/**
+	 * <pre>
+	 * 	2014-02-09 20:23:09,163  INFO (MultiApp.java:63) - Device Record Count : 271
+	 * 	2014-02-09 20:23:10,095  INFO (MultipleIndexLuceneContext.java:248) - Create Document ... start
+	 * 	2014-02-09 20:23:10,103  INFO (MultipleIndexLuceneContext.java:251) - Create Document ... end<----
+	 * 	2014-02-09 20:23:10,118  INFO (MultipleIndexLuceneContext.java:248) - Create Document ... start
+	 * 	2014-02-09 20:23:10,128  INFO (MultipleIndexLuceneContext.java:251) - Create Document ... end<----
+	 * 	2014-02-09 20:23:10,160  INFO (MultipleIndexLuceneContext.java:248) - Create Document ... start
+	 * 	2014-02-09 20:23:10,164  INFO (MultipleIndexLuceneContext.java:140) - Search ... start
+	 * 	2014-02-09 20:23:10,169  INFO (MultipleIndexLuceneContext.java:251) - Create Document ... end<----
+	 * 	2014-02-09 20:23:10,179  INFO (MultipleIndexLuceneContext.java:172) - Search ... end<----
+	 * 	2014-02-09 20:23:10,180  INFO (MultiApp.java:63) - Device Record Count : 274
+	 * </pre>
+	 */
 }
