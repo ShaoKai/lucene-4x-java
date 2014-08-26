@@ -7,17 +7,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PageInfo<V> {
+
 	private static final Logger logger = LoggerFactory.getLogger(PageInfo.class);
+
 	private List<V> data = new ArrayList<V>();
+
 	private int recordCount;
+
 	private int pageSize = 100;
+
 	private int page;
+
 	private int totalPage;
+
 	private int startRecord;
+
 	private int endRecord;
 
-	public PageInfo(int recordCount, int page) {
+	public PageInfo(int recordCount, int page, int pageSize) {
 		super();
+		this.pageSize = pageSize;
 		this.totalPage = recordCount % pageSize == 0 ? recordCount / pageSize : recordCount / pageSize + 1;
 
 		this.recordCount = recordCount;
@@ -36,8 +45,30 @@ public class PageInfo<V> {
 			this.startRecord = start;
 			this.endRecord = end;
 		}
-		// logger.info("startRecord,endRecord : {},{} ", this.startRecord,
-		// this.endRecord);
+		// logger.info("startRecord,endRecord : {},{} ", this.startRecord, this.endRecord);
+	}
+
+	public PageInfo(int recordCount, int page) {
+		super();
+		this.totalPage = ((recordCount % pageSize) == 0) ? (recordCount / pageSize) : (recordCount / pageSize) + 1;
+
+		this.recordCount = recordCount;
+		this.page = page > totalPage ? totalPage : page;
+
+		logger.debug("page,totalPage : {},{} ", this.page, totalPage);
+
+		if (recordCount == 0) {
+			this.startRecord = 0;
+			this.endRecord = 0;
+		} else {
+			int start = (this.page - 1) * this.pageSize;
+			int end = start + this.pageSize;
+			end = end > this.recordCount ? this.recordCount : end;
+
+			this.startRecord = start;
+			this.endRecord = end;
+		}
+		logger.debug("startRecord,endRecord : {},{} ", this.startRecord, this.endRecord);
 	}
 
 	public int getStartRecord() {
@@ -78,6 +109,10 @@ public class PageInfo<V> {
 
 	public void setRecordCount(int recordCount) {
 		this.recordCount = recordCount;
+	}
+
+	public void setStartRecord(int startRecord) {
+		this.startRecord = startRecord;
 	}
 
 	public List<V> getData() {

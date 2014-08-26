@@ -6,22 +6,24 @@ import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sky.lucene.LuceneContext.Domain;
-import com.sky.lucene.LuceneContext.IndexManager;
+import com.sky.lucene.LuceneContextHolder.Domain;
+import com.sky.lucene.LuceneContextHolder.IndexManager;
 
 public class App {
+
 	private static final Logger logger = LoggerFactory.getLogger(App.class);
 
 	public static void main(String[] args) throws IOException {
-		LuceneContext.getInstance();
+		LuceneContextHolder.getInstance();
 		new Thread() {
+
 			public void run() {
 				while (true) {
-					VoDevice voDevice = new VoDevice();
-					voDevice.setDeviceId("A00001");
-					voDevice.setCategory("SD");
+					VoDocument voDocument = new VoDocument();
+					voDocument.setDocumentId("A00001");
+					voDocument.setCategory("SD");
 
-					LuceneContext.getInstance().getIndexManager(Domain.DEVICE).addVo(voDevice);
+					LuceneContextHolder.getInstance().getIndexManager(Domain.DOCUMENT).addVo(voDocument);
 
 					try {
 						Thread.sleep(1000);
@@ -33,13 +35,14 @@ public class App {
 			}
 		}.start();
 		new Thread() {
+
 			public void run() {
 				while (true) {
-					VoDevice voDevice = new VoDevice();
-					voDevice.setDeviceId("A00001");
-					voDevice.setCategory("SD");
+					VoDocument voDocument = new VoDocument();
+					voDocument.setDocumentId("A00001");
+					voDocument.setCategory("SD");
 
-					LuceneContext.getInstance().getIndexManager(Domain.DEVICE).addVo(voDevice);
+					LuceneContextHolder.getInstance().getIndexManager(Domain.DOCUMENT).addVo(voDocument);
 
 					try {
 						Thread.sleep(1000);
@@ -52,12 +55,13 @@ public class App {
 		}.start();
 
 		new Thread() {
+
 			public void run() {
 				while (true) {
-					IndexManager deviceManager = LuceneContext.getInstance().getIndexManager(Domain.DEVICE);
-					Query query = deviceManager.createKeywordQuery("000");
-					PageInfo<VoDevice> pageInfo = deviceManager.search(query, 1, 10);
-					logger.info("Device Record Count : {}", pageInfo.getRecordCount());
+					IndexManager docManager = LuceneContextHolder.getInstance().getIndexManager(Domain.DOCUMENT);
+					Query query = docManager.createKeywordQuery("0");
+					PageInfo<VoDocument> pageInfo = docManager.search(query, 1, 10);
+					logger.info("Record Count : {}", pageInfo.getRecordCount());
 
 					try {
 						Thread.sleep(1000);
